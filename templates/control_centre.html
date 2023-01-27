@@ -30,11 +30,20 @@
 
         <input type="submit" value="Run">
     </form>
+    <table>
+        <tr>
+            <th>Host ID</th>
+            <th>IP Address</th>
+            <th>Current Task</th>
+        </tr>
     {% for id, client in clients %}
-    <h2>{{ id }}</h2>
-    <h3>{{ client.key }} </h3>
-    <h3>{{ client.addr }}</h3>
+        <tr>
+            <td>{{ id }}</td>
+            <td>{{ client.addr }} </td>
+            <td>{{ client.current_task }} </td>
+        </tr>
     {% endfor %}
+    </table>
 
 </body>
 
