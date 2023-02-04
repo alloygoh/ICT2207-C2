@@ -23,3 +23,10 @@ def encrypt(plaintext, key):
 		plaintext = plaintext.encode()
 	cipher = ARC4.new(key)
 	return b64e(cipher.encrypt(plaintext))
+
+def rc4_decrypt(ciphertext, key):
+	if isinstance(ciphertext, str):
+		plaintext = plaintext.encode()
+	cipher = ARC4.new(key)
+	return cipher.decrypt(b64d(ciphertext))
+

