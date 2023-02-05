@@ -16,7 +16,7 @@
 <body class="sb-nav-fixed">
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
         <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" href="">Control Centre</a>
+        <a class="navbar-brand ps-3" href="">YummyTiramisu</a>
     </nav>
     <div id="layoutSidenav">
         <div id="layoutSidenav_nav">
@@ -26,7 +26,7 @@
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
-                    <h1 class="mt-4">Host Information</h1>
+                    <h1 class="mt-4">Control Centre</h1>
                     <div class="row">
                         <div class="col-xl-3 col-md-6">
                             <div class="card bg-success text-white mb-4">
@@ -85,7 +85,7 @@
                                         <td class="col-1">{{ loop.index }}
                                         <td class="col-2">{{ id }}</td>
                                         <td class="col-2">{{ client.addr }}</td>
-                                        <td class="col-6">{{ client.current_task }}</td>
+                                        <td class="col-6">{{ client.current_task.label }}</td>
                                         <td class="col-1"><a type="button" class="btn btn-primary"
                                                 href="client?id={{ id }}"><i class="far fa-eye"></i></a></td>
                                     </tr>

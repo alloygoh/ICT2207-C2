@@ -16,18 +16,26 @@
 <body class="sb-nav-fixed">
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
         <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" href="/">Control Centre</a>
+        <a class="navbar-brand ps-3" href="/">YummyTiramisu</a>
     </nav>
     <div id="layoutSidenav">
         <div id="layoutSidenav_nav">
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="sb-sidenav-menu">
                     <div class="nav">
-                        <div class="sb-sidenav-menu-heading">Commands</div>
-
-                        {% for command in commands %}
+                        
+                        <div class="sb-sidenav-menu-heading">File System</div>
+                        {% for command, args in file_listing_commands %}
                         <a class="nav-link"
-                            href="client?id={{ client_id }}&cmd={{ command.command_code }}&arg={{ command.arg }}">
+                            href="client?id={{ client_id }}&cmd={{ command.command_code }}&args={{ args }}">
+                            {{ command.label }}
+                        </a>
+                        {% endfor %}
+                        <div class="sb-sidenav-menu-heading">Discovery</div>
+
+                        {% for command_code, command in sidebar_commands %}
+                        <a class="nav-link"
+                            href="client?id={{ client_id }}&cmd={{ command_code }}">
                             {{ command.label }}
                         </a>
                         {% endfor %}
@@ -39,8 +47,27 @@
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
-                    <h1 class="mt-4">{{ client_id }}</h1>
+                    <h1 class="mt-4">{{ client_id }} (IP: {{ ip_address }})</h1>
+                    <div class="col-xl-12">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="fas fa-file me-1"></i>
+                                Files: {{ file_listing_directory }}
+                            </div>
+                            <div class="card-body">
+                                {% if file_listing %}
+                                    {% for file in file_listing %}
+                                        <a href="client?id={{ client_id }}&cmd=0&args={{ file_listing_directory }},{{ file }}">{{ file }}</a>
+                                        <br>
+                                    {% endfor %}
+                                {% else %}
+                                    Looks like there are no files to display, use the 'File System' commands to retrieve information from host
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                
             </main>
             <footer class="py-4 bg-light mt-auto">
                 <div class="container-fluid px-4">
