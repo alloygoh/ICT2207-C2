@@ -44,7 +44,7 @@ class Client:
     def complete_task(self, data):
 
         client_id = self.id.hex().upper()
-        print_debug("Completing task for {client_id}")
+        print_debug(f"Completing task for {client_id}")
         if self.current_task.command_code == 0x0:
             data = rc4_decrypt(data, self.key)
             data = data[5:]
@@ -277,7 +277,7 @@ def provide_command():
         return data
 
     else:
-        return encrypt(b"90", client.key)
+        return encrypt(b"\x5A", client.key)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -342,7 +342,7 @@ def control_client():
         sidebar_commands=sidebar_commands.items(),
         display_stream_on=client.display_stream_on,
         rtsp_url=RTSP_URL,
-        camera_stream_on=client.display_stream_on,
+        camera_stream_on=client.camera_stream_on,
         file_listing=client.file_listing,
         file_listing_directory=client.file_listing_directory,
         database_listing=database_listing,

@@ -60,16 +60,16 @@
                                         </div>
                                         <div class="col-xl-1">
                                             {% if display_stream_on %}
-                                            <a class="btn btn-danger" href="client?id={{ client_id }}&cmd=6">OFF</a>
+                                            <a class="btn btn-danger float-end" href="client?id={{ client_id }}&cmd=6">OFF</a>
                                             {% else %}
-                                            <a class="btn btn-success" href="client?id={{ client_id }}&cmd=5">ON</a>
+                                            <a class="btn btn-success float-end" href="client?id={{ client_id }}&cmd=5">ON</a>
                                             {% endif %}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-body">
                                     {% if display_stream_on %}
-                                    <iframe src="{{ rtsp_url }}/{{client_id}}1" scrolling="no"></iframe>
+                                    <iframe src="{{ rtsp_url }}/{{client_id}}1" scrolling="no" style="width:100%; height:100%;"></iframe>
                                     {% else %}
                                     Screen live feed not started
                                     {% endif %}
@@ -85,16 +85,14 @@
                                             Camera Live Feed
                                         </div>
                                         {% if camera_stream_on %}
-                                        <div class="col-xl-1">
-                                            <a class="btn btn-dark" href="client?id={{ client_id }}&cmd=3">FLIP</a>
-                                        </div>
-                                        <div class="col-xl-1">
+                                        <div class="col-xl-2 d-inline-flex flex-row-reverse">
                                             <a class="btn btn-danger" href="client?id={{ client_id }}&cmd=4">OFF</a>
+                                            <a class="btn btn-dark" href="client?id={{ client_id }}&cmd=3">FLIP</a>
                                         </div>
                                         {% else %}
                                         <div class="col-xl-1"></div>
                                         <div class="col-xl-1">
-                                            <a class="btn btn-success" href="client?id={{ client_id }}&cmd=2">ON</a>
+                                            <a class="btn btn-success float-end" href="client?id={{ client_id }}&cmd=2">ON</a>
                                         </div>
                                         {% endif %}
 
@@ -102,7 +100,7 @@
                                 </div>
                                 <div class="card-body">
                                     {% if camera_stream_on %}
-                                    <iframe src="{{ rtsp_url }}/{{client_id}}" scrolling="no"></iframe>
+                                    <iframe src="{{ rtsp_url }}/{{client_id}}" scrolling="no" style="width:100%; height:100%;"></iframe>
                                     {% else %}
                                     Camera live feed not started
                                     {% endif %}
