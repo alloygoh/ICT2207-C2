@@ -390,3 +390,12 @@ def control_client():
         file_listing_directory=client.file_listing_directory,
         database_listing=database_listing,
     )
+
+# used to control individual clients
+@app.route("/api/errors", methods=["POST"])
+def error():
+    request_data = request.data
+    client_id = request_data[0:8].decode()
+    client = clients.get(client_id)
+    client.current_task = None
+    return '', 204
