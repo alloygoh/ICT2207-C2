@@ -41,7 +41,7 @@
                                     <h3 class="card-title">Unique Locations</h5>
                                 </div>
                                 <div class="card-footer d-flex align-items-center justify-content-between">
-                                    <h4 class="card-text">0</h4>
+                                    <h4 class="card-text">{{ location_count }}</h4>
                                 </div>
                             </div>
                             <div class="card bg-primary text-white mb-4">
@@ -57,9 +57,66 @@
                             <div class="card mb-4">
                                 <div class="card-header">
                                     <i class="fas fa-chart-area me-1"></i>
-                                    Area Chart Example
+                                    Host Geodata
                                 </div>
-                                <div class="card-body"><canvas id="myAreaChart" width="100%" height="40"></canvas></div>
+                                <div class="card-body">
+                                    <!--The div element for the map -->
+                                    <div id="map" style="height:330px; width:100%;"></div>
+
+                                    <!-- 
+                                      The `defer` attribute causes the callback to execute after the full HTML
+                                      document has been parsed. For non-blocking uses, avoiding race conditions,
+                                      and consistent behavior across browsers, consider loading using Promises
+                                      with https://www.npmjs.com/package/@googlemaps/js-api-loader.
+                                      -->
+
+                                    <script
+                                        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5dUSeS2vi4SsFvQFX8oZXRb-I1QJlp1o&callback=initMap&v=weekly"
+                                        defer></script>
+
+                                    {% block javascript %}
+                                        <script>
+                                            // Initialize and add the map
+                                            function initMap() {
+                                                // The location of Uluru
+                                                const singapore = { lat: 1.314, lng: 103.84425005 };
+                                                // The map, centered at Uluru
+                                                const map = new google.maps.Map(document.getElementById("map"), {
+                                                    zoom: 12,
+                                                    center: singapore,
+                                                });
+                                                const infoWindow = new google.maps.InfoWindow();
+
+                                                const markers = [
+                                                    {% for client_id, client in clients %}
+                                                        {% if client.geolocation %}
+                                                            [{ lat: {{ client.geolocation[0] }}, lng: {{ client.geolocation[1] }} }, "{{ client_id }}"],
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                ]
+                                                markers.forEach(([position, title], i) => {
+                                                    const marker = new google.maps.Marker({
+                                                      position,
+                                                      map,
+                                                      title: `${title}`,
+                                                      label: `${title}`,
+                                                      optimized: false,
+                                                    });
+
+                                                    // Add a click listener for each marker, and set up the info window.
+                                                    marker.addListener("click", () => {
+                                                      infoWindow.close();
+                                                      infoWindow.setContent("lat: " + position['lat'] + ' long: ' + position['lng'] );
+                                                      infoWindow.open(marker.getMap(), marker);
+                                                    });
+                                                  });
+
+                                            }
+
+                                            window.initMap = initMap;
+                                        </script>
+                                    {% endblock %}
+                                </div>
                             </div>
                         </div>
                     </div>

