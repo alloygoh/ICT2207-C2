@@ -10,6 +10,7 @@ from flask import (
 from datetime import datetime
 from encryption import *
 from utils import print_debug
+import time
 
 
 PACKET_CALLBACK = 0x1
@@ -268,6 +269,11 @@ def provide_command():
     client_id = request.args.get("id")
     client = clients.get(client_id)
     print_debug(client_id)
+
+    # If its empty just hold the request until either one dies
+    while(client.current_task is None):
+        time.sleep(0.5)
+
     if client.current_task:
         data = client.current_task.run()
         print_debug(data)
