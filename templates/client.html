@@ -142,8 +142,7 @@
                                     <table id="database" class="display" style="width:100%;">
                                         <thead>
                                             <tr>
-                                                <th>Log Type</th>
-                                                <th>Timestamp</th>
+                                                <th>File Name</th>
                                                 <th>Size</th>
                                                 <th></th>
                                             </tr>
@@ -153,9 +152,8 @@
                                             <tr>
                                                 <td>{{ entry[0] }}</td>
                                                 <td>{{ entry[1] }}</td>
-                                                <td>{{ entry[2] }}</td>
                                                 <td><a type="button" class="btn btn-primary"
-                                                        href="data?log={{ entry[3] }}"><i
+                                                        href="data?log={{ entry[2] }}"><i
                                                             class="fa fa-download"></i></a></td>
                                             </tr>
                                             {% endfor %}

